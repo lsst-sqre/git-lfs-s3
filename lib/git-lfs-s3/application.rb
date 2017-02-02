@@ -72,9 +72,9 @@ module GitLfsS3
         'size'          => size,
         'authenticated' => authenticated,
         'actions'       => {
-          'download'    => {
-            'href'      => obj.presigned_url(:get,
-                                             :expires_in => 86400),
+          'download'  => {
+            'href'  => obj.presigned_url(:get,
+                                         :expires_in => 86400),
           },
         },
         'expires_at'    => expire_at,
@@ -90,10 +90,10 @@ module GitLfsS3
         'size'          => size,
         'authenticated' => authenticated,
         'actions'       => {
-          'upload'      => {
-            'href'      => obj.presigned_url(:put,
-                                             acl: 'public-read',
-                                             :expires_in => 86400),
+          'upload'    => {
+            'href'  => obj.presigned_url(:put,
+                                         acl: 'public-read',
+                                         :expires_in => 86400),
           },
           'expires_at'  => expire_at,
         },
@@ -103,9 +103,9 @@ module GitLfsS3
     def obj_error(error, message, obj_json)
       # Format a single error object.
       {
-        'oid'       => obj_json[:oid],
-        'size'      => obj_json[:size],
-        'error'     => {
+        'oid'         => obj_json[:oid],
+        'size'        => obj_json[:size],
+        'error'       => {
           'code'    => error,
           'message' => message,
         },
@@ -118,7 +118,7 @@ module GitLfsS3
       params[:objects].each do |obj_json|
         obj_json = indifferent_params(obj_json)
         obj = object_data(obj_json[:oid])
-        if valid_object?(obj_json)
+        if valid_obj?(obj_json)
           if obj.exists?
             objects.push(obj_download(authenticated, obj, obj_json))
           else
@@ -176,13 +176,11 @@ module GitLfsS3
       params = indifferent_params(JSON.parse(request.body.read))
       logger.debug params
       if params[:operation] == 'download'
-        objects = download(authenticated, params)
+        lfs_resp(download(authenticated, params))
       elsif params[:operation] == 'upload'
         if authenticated
-          objects = upload(authenticated, params)
-          lfs_resp(objects)
+          lfs_resp(upload(authenticated, params))
         else
-          objects = nil
           error_resp(401, 'Credentials needed')
         end
       else
