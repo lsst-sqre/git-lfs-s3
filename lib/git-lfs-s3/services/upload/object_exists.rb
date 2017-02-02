@@ -9,7 +9,7 @@ module GitLfsS3
         {
           '_links' => {
             'download' => {
-              'href' => object.presigned_url(:get)
+              'href' => object.presigned_url(:get, :expires_in => 86400)
             }
           }
         }
