@@ -49,83 +49,83 @@ module GitLfsS3
       "Git LFS S3 is online."
     end
 
-    def valid_object?(object)
+    def valid_obj?(obj)
+      # Validate that size >= 0 and oid is a SHA256 hash.
       begin
-        valid = object[:size] >= 0
-      rescue
-        valid = false
-      end
-      begin        
-        if valid
-          oid = object[:oid].hex
-          valid = oid.size == 32 && object[:oid].size == 64
+        if obj[:size] >= 0
+          oid = obj[:oid]
+          valid = (oid.hex.size <= 32) and (oid.size == 64) and (oid =~ /^[0-9a-f]+$/)
         end
-      rescue
-        valid = false
       end
-      valid
     end
 
-    def object_download(authenticated, object, object_json)
+    def expire_at()
+      DateTime.now.next_day.to_time.utc.iso8601
+    end
+
+    def obj_download(authenticated, obj, obj_json)
       # Format a single download object.
-      oid = object_json[:oid]
-      size = object_json[:size]
+      oid = obj_json[:oid]
+      size = obj_json[:size]
       {
-        'oid' => oid,
-        'size' => size,
+        'oid'           => oid,
+        'size'          => size,
         'authenticated' => authenticated,
-        'actions' => {
-          'download' => {
-            'href' => object.presigned_url(:get, :expires_in => 86400)
-          }
+        'actions'       => {
+          'download'    => {
+            'href'      => obj.presigned_url(:get,
+                                             :expires_in => 86400),
+          },
         },
-        'expires_at' => DateTime.now.next_day.to_time.utc.iso8601
+        'expires_at'    => expire_at,
       }
     end
 
-    def object_upload(authenticated, object, object_json)
+    def obj_upload(authenticated, obj, obj_json)
       # Format a single upload object.
-      oid = object_json[:oid]
-      size = object_json[:size]
+      oid = obj_json[:oid]
+      size = obj_json[:size]
       {
-        'oid' => oid,
-        'size' => size,
+        'oid'           => oid,
+        'size'          => size,
         'authenticated' => authenticated,
-        'actions' => {
-          'upload' => {
-            'href' => object.presigned_url(:put, acl: 'public-read', :expires_in => 86400)
-          }
+        'actions'       => {
+          'upload'      => {
+            'href'      => obj.presigned_url(:put,
+                                             acl: 'public-read',
+                                             :expires_in => 86400),
+          },
+          'expires_at'  => expire_at,
         },
-        'expires_at' => DateTime.now.next_day.to_time.utc.iso8601
       }
     end
 
-    def object_error(error, message, object, object_json)
+    def obj_error(error, message, obj_json)
       # Format a single error object.
       {
-        'oid' => object_json[:oid],
-        'size' => object_json[:size],
-        'error' => {
-          'code' => error,
-          'message' => message
-        }
+        'oid'       => obj_json[:oid],
+        'size'      => obj_json[:size],
+        'error'     => {
+          'code'    => error,
+          'message' => message,
+        },
       }
     end
 
     def download(authenticated, params)
       # Handle git-lfs batch downloads.
-      objects = Array.new
-      params[:objects].each do |object_json|
-        object_json = indifferent_params object_json
-        object = object_data object_json[:oid]
-        if valid_object? object_json
-          if object.exists?
-            objects.push object_download(authenticated, object, object_json)
+      objects = []
+      params[:objects].each do |obj_json|
+        obj_json = indifferent_params(obj_json)
+        obj = object_data(obj_json[:oid])
+        if valid_object?(obj_json)
+          if obj.exists?
+            objects.push(obj_download(authenticated, obj, obj_json))
           else
-            objects.push object_error(404, 'Object does not exist', object, object_json)
+            objects.push(obj_error(404, 'Object does not exist', obj_json))
           end
         else
-          objects.push object_error(422, 'Validation error', object, object_json)
+          objects.push(obj_error(422, 'Validation error', obj_json))
         end
       end
       objects
@@ -133,42 +133,40 @@ module GitLfsS3
 
     def upload(authenticated, params)
       # Handle git-lfs batch uploads.
-      objects = Array.new
-      params[:objects].each do |object_json|
-        object_json = indifferent_params object_json
-        object = object_data object_json[:oid]
-        if valid_object? object_json
-          if object.exists?
-            objects.push object_download(authenticated, object, object_json)
+      objects = []
+      params[:objects].each do |obj_json|
+        obj_json = indifferent_params(obj_json)
+        obj = object_data(obj_json[:oid])
+        if valid_obj?(obj_json)
+          if obj.exists?
+            objects.push(obj_download(authenticated, obj, obj_json))
           else
-            objects.push object_upload(authenticated, object, object_json)
+            objects.push(obj_upload(authenticated, obj, obj_json))
           end
         else
-          objects.push object_error(422, 'Validation error', object, object_json)
+          objects.push(obj_error(422, 'Validation error', obj_json))
         end
       end
       objects
-    end
+      end
 
     def lfs_resp(objects)
       # Successful git-lfs batch response.
-      status 200
+      status(200)
       resp = {
         'transfer' => 'basic',
         'objects' => objects
       }
-      logger.debug resp
       body MultiJson.dump(resp)
     end
     
     def error_resp(status_code, message)
       # Error git-lfs batch response.
-      status status_code
+      status(status_code)
       resp = {
         'message' => message,
         'request_id' => SecureRandom::uuid
       }
-      logger.debug resp
       body MultiJson.dump(resp)
     end
     
@@ -176,21 +174,19 @@ module GitLfsS3
       # git-lfs batch API
       authenticated = authorized?
       params = indifferent_params(JSON.parse(request.body.read))
-      
+      logger.debug params
       if params[:operation] == 'download'
         objects = download(authenticated, params)
       elsif params[:operation] == 'upload'
         if authenticated
           objects = upload(authenticated, params)
+          lfs_resp(objects)
         else
           objects = nil
+          error_resp(401, 'Credentials needed')
         end
-      end
-      
-      if objects
-        lfs_resp(objects)
       else
-        error_resp(401, 'Credentials needed')
+        error_resp(422, 'Validation error')
       end
     end
 
@@ -240,16 +236,6 @@ module GitLfsS3
       status service.status
       body MultiJson.dump(service.response)
     end
-
-    post "/objects/batch", provides: 'application/vnd.git-lfs+json' do
-      logger.debug headers.inspect
-      service = UploadBatchService.service_for(request.body)
-      logger.debug service.response
-      
-      status service.status
-      body MultiJson.dump(service.response)
-    end
-
 
     post '/verify', provides: 'application/vnd.git-lfs+json' do
       data = MultiJson.load(request.body.tap { |b| b.rewind }.read)
