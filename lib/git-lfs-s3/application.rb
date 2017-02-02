@@ -67,6 +67,7 @@ module GitLfsS3
     end
 
     def object_download(authenticated, object, object_json)
+      # Format a single download object.
       oid = object_json[:oid]
       size = object_json[:size]
       {
@@ -100,6 +101,7 @@ module GitLfsS3
     end
 
     def object_error(error, message, object, object_json)
+      # Format a single error object.
       {
         'oid' => object_json[:oid],
         'size' => object_json[:size],
@@ -111,6 +113,7 @@ module GitLfsS3
     end
 
     def download(authenticated, params)
+      # Handle git-lfs batch downloads.
       objects = Array.new
       params[:objects].each do |object_json|
         object_json = indifferent_params object_json
@@ -129,6 +132,7 @@ module GitLfsS3
     end
 
     def upload(authenticated, params)
+      # Handle git-lfs batch uploads.
       objects = Array.new
       params[:objects].each do |object_json|
         object_json = indifferent_params object_json
@@ -147,6 +151,7 @@ module GitLfsS3
     end
 
     def lfs_resp(objects)
+      # Successful git-lfs batch response.
       status 200
       resp = {
         'transfer' => 'basic',
@@ -157,6 +162,7 @@ module GitLfsS3
     end
     
     def error_resp(status_code, message)
+      # Error git-lfs batch response.
       status status_code
       resp = {
         'message' => message,
@@ -167,7 +173,7 @@ module GitLfsS3
     end
     
     post '/objects/batch', provides: 'application/vnd.git-lfs+json' do
-      # Git LFS Batch API
+      # git-lfs batch API
       authenticated = authorized?
       params = indifferent_params(JSON.parse(request.body.read))
       
