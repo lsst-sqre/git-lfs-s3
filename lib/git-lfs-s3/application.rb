@@ -178,6 +178,10 @@ module GitLfsS3
       if params[:operation] == 'download'
         if settings.public_server
           lfs_resp(download(authenticated, params))
+        elsif authenticated
+          lfs_resp(download(authenticated, params))
+        else
+          error_resp(401, 'Credentials needed')
         end
       elsif params[:operation] == 'upload'
         if authenticated
