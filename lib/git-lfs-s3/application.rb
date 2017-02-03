@@ -72,12 +72,12 @@ module GitLfsS3
         'size'          => size,
         'authenticated' => authenticated,
         'actions'       => {
-          'download'  => {
-            'href'  => obj.presigned_url(:get,
-                                         :expires_in => 86400),
+          'download'      => {
+            'href'          => obj.presigned_url(:get,
+                                                 :expires_in => 86400),
+            'expires_at'    => expire_at,
           },
         },
-        'expires_at'    => expire_at,
       }
     end
 
@@ -90,12 +90,12 @@ module GitLfsS3
         'size'          => size,
         'authenticated' => authenticated,
         'actions'       => {
-          'upload'    => {
-            'href'  => obj.presigned_url(:put,
-                                         acl: 'public-read',
-                                         :expires_in => 86400),
+          'upload'        => {
+            'href'          => obj.presigned_url(:put,
+                                                 acl: 'public-read',
+                                                 :expires_in => 86400),
+            'expires_at'    => expire_at,
           },
-          'expires_at'  => expire_at,
         },
       }
     end
@@ -106,8 +106,8 @@ module GitLfsS3
         'oid'         => obj_json[:oid],
         'size'        => obj_json[:size],
         'error'       => {
-          'code'    => error,
-          'message' => message,
+          'code'        => error,
+          'message'     => message,
         },
       }
     end
@@ -181,7 +181,9 @@ module GitLfsS3
         end
       elsif params[:operation] == 'upload'
         if authenticated
-          lfs_resp(upload(authenticated, params))
+          resp = lfs_resp(upload(authenticated, params))
+          logger.debug resp
+          resp
         else
           error_resp(401, 'Credentials needed')
         end
