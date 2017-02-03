@@ -176,7 +176,9 @@ module GitLfsS3
       params = indifferent_params(JSON.parse(request.body.read))
       logger.debug params
       if params[:operation] == 'download'
-        lfs_resp(download(authenticated, params))
+        if settings.public_server
+          lfs_resp(download(authenticated, params))
+        end
       elsif params[:operation] == 'upload'
         if authenticated
           lfs_resp(upload(authenticated, params))
@@ -189,28 +191,30 @@ module GitLfsS3
     end
 
     get "/objects/:oid", provides: 'application/vnd.git-lfs+json' do
-      object = object_data(params[:oid])
-
-      if object.exists?
-        status 200
-        resp = {
-          'oid' => params[:oid],
-          'size' => object.size,
-          '_links' => {
-            'self' => {
-              'href' => File.join(settings.server_url, 'objects', params[:oid])
-            },
-            'download' => {
-              # TODO: cloudfront support
-              'href' => object_data(params[:oid]).presigned_url(:get)
+      if settings.public_server
+        object = object_data(params[:oid])
+        if object.exists?
+          status 200
+          resp = {
+            'oid' => params[:oid],
+            'size' => object.size,
+            '_links' => {
+              'self' => {
+                'href' => File.join(settings.server_url, 'objects', params[:oid])
+              },
+              'download' => {
+                'href' => object_data(params[:oid]).presigned_url(:get)
+              }
             }
           }
-        }
-
-        body MultiJson.dump(resp)
+          body MultiJson.dump(resp)
+        else
+          status 404
+          body MultiJson.dump({message: 'Object not found'})
+        end
       else
-        status 404
-        body MultiJson.dump({message: 'Object not found'})
+        status 401
+        body MultiJson.dump({message: 'Invalid username or password'})
       end
     end
 
@@ -221,33 +225,38 @@ module GitLfsS3
       Aws::S3::Types::Grant.new(grantee: grantee, permission: "READ")
     end
 
-    before do
-      pass if request.safe? and settings.public_server
-      protected!
-    end
-
     post "/objects", provides: 'application/vnd.git-lfs+json' do
-      logger.debug headers.inspect
-      service = UploadService.service_for(request.body)
-      logger.debug service.response
-      
-      status service.status
-      body MultiJson.dump(service.response)
+      if authorized?
+        logger.debug headers.inspect
+        service = UploadService.service_for(request.body)
+        logger.debug service.response
+        
+        status service.status
+        body MultiJson.dump(service.response)
+      else
+        status 401
+        body MultiJson.dump({message: 'Invalid username or password'})
+      end
     end
 
     post '/verify', provides: 'application/vnd.git-lfs+json' do
-      data = MultiJson.load(request.body.tap { |b| b.rewind }.read)
-      object = object_data(data['oid'])
-      if not object.exists?
-        status 404
-      end
-      if settings.public_server and settings.ceph_s3
-        if not object.acl.grants.include?(public_read_grant)
-          object.acl.put(acl: "public-read")
+      if authorized?
+        data = MultiJson.load(request.body.tap { |b| b.rewind }.read)
+        object = object_data(data['oid'])
+        if not object.exists?
+          status 404
         end
-      end
-      if object.size == data['size']
-        status 200
+        if settings.public_server and settings.ceph_s3
+          if not object.acl.grants.include?(public_read_grant)
+            object.acl.put(acl: "public-read")
+          end
+        end
+        if object.size == data['size']
+          status 200
+        end
+      else
+        status 401
+        body MultiJson.dump({message: 'Invalid username or password'})
       end
     end
   end
