@@ -119,7 +119,7 @@ module GitLfsS3
       # Handle git-lfs batch downloads.
       objects = []
       params[:objects].each do |obj_json|
-        obj_json = indifferent_params(obj_json)
+        obj_json = IndifferentHash(obj_json)
         obj = object_data(obj_json[:oid])
         if valid_obj?(obj_json)
           if obj.exists?
@@ -138,7 +138,7 @@ module GitLfsS3
       # Handle git-lfs batch uploads.
       objects = []
       params[:objects].each do |obj_json|
-        obj_json = indifferent_params(obj_json)
+        obj_json = IndifferentHash(obj_json)
         obj = object_data(obj_json[:oid])
         if valid_obj?(obj_json)
           if obj.exists?
@@ -176,7 +176,7 @@ module GitLfsS3
     post '/objects/batch', provides: 'application/vnd.git-lfs+json' do
       # git-lfs batch API
       authenticated = authorized?
-      params = indifferent_params(JSON.parse(request.body.read))
+      params = IndifferentHash(JSON.parse(request.body.read))
       logger.debug params
       if params[:operation] == 'download'
         if settings.public_server
