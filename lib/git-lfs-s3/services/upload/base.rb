@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 module GitLfsS3
   module UploadService
     class Base
       include AwsHelpers
-      
+
       attr_reader :req, :object
 
       def initialize(req, object)
@@ -11,11 +13,11 @@ module GitLfsS3
       end
 
       def response
-        raise "Override"
+        raise 'Override'
       end
 
       def status
-        raise "Override"
+        raise 'Override'
       end
 
       private

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'date'
 
 module GitLfsS3
@@ -32,34 +34,35 @@ module GitLfsS3
     end
 
     def authorized?
-      @auth ||=  Rack::Auth::Basic::Request.new(request.env)
-      @auth.provided? && @auth.basic? && @auth.credentials && self.class.auth_callback.call(
-        @auth.credentials[0], @auth.credentials[1], request.safe?
-      )
+      @auth ||= Rack::Auth::Basic::Request.new(request.env)
+      @auth.provided? &&
+        @auth.basic? &&
+        @auth.credentials &&
+        self.class.auth_callback.call(
+          @auth.credentials[0], @auth.credentials[1], request.safe?
+        )
     end
 
     def protected!
-      unless authorized?
-        response['WWW-Authenticate'] = %(Basic realm="Restricted Area")
-        throw(:halt, [401, "Invalid username or password"])
-      end
+      return unless authorized?
+      response['WWW-Authenticate'] = %(Basic realm="Restricted Area")
+      throw(:halt, [401, 'Invalid username or password'])
     end
 
     get '/' do
-      "Git LFS S3 is online."
+      'Git LFS S3 is online.'
     end
 
     def valid_obj?(obj)
       # Validate that size >= 0 and oid is a SHA256 hash.
-      begin
-        if obj[:size] >= 0
-          oid = obj[:oid]
-          valid = (oid.hex.size <= 32) and (oid.size == 64) and (oid =~ /^[0-9a-f]+$/)
-        end
-      end
+      oid = obj[:oid]
+      return unless obj[:size] >= 0
+      (oid.hex.size <= 32) && (oid.size == 64) && (oid =~ /^[0-9a-f]+$/)
+      # XXX what exception needs to be ignored here?
+    rescue Exception
     end
 
-    def expire_at()
+    def expire_at
       DateTime.now.next_day.to_time.utc.iso8601
     end
 
@@ -72,9 +75,9 @@ module GitLfsS3
         'size'          => size,
         'authenticated' => authenticated,
         'actions'       => {
-          'download'      => {
+          'download' => {
             'href'          => obj.presigned_url(:get,
-                                                 :expires_in => 86400),
+                                                 expires_in: 86_400),
             'expires_at'    => expire_at,
           },
         },
@@ -90,10 +93,10 @@ module GitLfsS3
         'size'          => size,
         'authenticated' => authenticated,
         'actions'       => {
-          'upload'        => {
+          'upload' => {
             'href'          => obj.presigned_url(:put,
                                                  acl: 'public-read',
-                                                 :expires_in => 86400),
+                                                 expires_in: 86_400),
             'expires_at'    => expire_at,
           },
         },
@@ -148,7 +151,7 @@ module GitLfsS3
         end
       end
       objects
-      end
+    end
 
     def lfs_resp(objects)
       # Successful git-lfs batch response.
@@ -159,17 +162,17 @@ module GitLfsS3
       }
       body MultiJson.dump(resp)
     end
-    
+
     def error_resp(status_code, message)
       # Error git-lfs batch response.
       status(status_code)
       resp = {
         'message' => message,
-        'request_id' => SecureRandom::uuid
+        'request_id' => SecureRandom.uuid
       }
       body MultiJson.dump(resp)
     end
-    
+
     post '/objects/batch', provides: 'application/vnd.git-lfs+json' do
       # git-lfs batch API
       authenticated = authorized?
@@ -196,7 +199,7 @@ module GitLfsS3
       end
     end
 
-    get "/objects/:oid", provides: 'application/vnd.git-lfs+json' do
+    get '/objects/:oid', provides: 'application/vnd.git-lfs+json' do
       if settings.public_server
         object = object_data(params[:oid])
         if object.exists?
@@ -206,7 +209,9 @@ module GitLfsS3
             'size' => object.size,
             '_links' => {
               'self' => {
-                'href' => File.join(settings.server_url, 'objects', params[:oid])
+                'href' => File.join(
+                  settings.server_url, 'objects', params[:oid]
+                )
               },
               'download' => {
                 'href' => object_data(params[:oid]).presigned_url(:get)
@@ -216,53 +221,50 @@ module GitLfsS3
           body MultiJson.dump(resp)
         else
           status 404
-          body MultiJson.dump({message: 'Object not found'})
+          body MultiJson.dump({ message: 'Object not found' })
         end
       else
         status 401
-        body MultiJson.dump({message: 'Invalid username or password'})
+        body MultiJson.dump({ message: 'Invalid username or password' })
       end
     end
 
     def public_read_grant
       grantee = Aws::S3::Types::Grantee.new(
         display_name: nil, email_address: nil, id: nil, type: nil,
-        uri: "http://acs.amazonaws.com/groups/global/AllUsers")
-      Aws::S3::Types::Grant.new(grantee: grantee, permission: "READ")
+        uri: 'http://acs.amazonaws.com/groups/global/AllUsers'
+      )
+      Aws::S3::Types::Grant.new(grantee: grantee, permission: 'READ')
     end
 
-    post "/objects", provides: 'application/vnd.git-lfs+json' do
+    post '/objects', provides: 'application/vnd.git-lfs+json' do
       if authorized?
         logger.debug headers.inspect
         service = UploadService.service_for(request.body)
         logger.debug service.response
-        
+
         status service.status
         body MultiJson.dump(service.response)
       else
         status 401
-        body MultiJson.dump({message: 'Invalid username or password'})
+        body MultiJson.dump({ message: 'Invalid username or password' })
       end
     end
 
     post '/verify', provides: 'application/vnd.git-lfs+json' do
       if authorized?
-        data = MultiJson.load(request.body.tap { |b| b.rewind }.read)
+        data = MultiJson.load(request.body.tap(&:rewind).read)
         object = object_data(data['oid'])
-        if not object.exists?
-          status 404
-        end
-        if settings.public_server and settings.ceph_s3
-          if not object.acl.grants.include?(public_read_grant)
-            object.acl.put(acl: "public-read")
+        status 404 unless object.exists?
+        if settings.public_server && settings.ceph_s3
+          unless object.acl.grants.include?(public_read_grant)
+            object.acl.put(acl: 'public-read')
           end
         end
-        if object.size == data['size']
-          status 200
-        end
+        status 200 if object.size == data['size']
       else
         status 401
-        body MultiJson.dump({message: 'Invalid username or password'})
+        body MultiJson.dump({ message: 'Invalid username or password' })
       end
     end
   end
