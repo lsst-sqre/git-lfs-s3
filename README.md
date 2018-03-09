@@ -1,5 +1,8 @@
 # LSST's Git LFS S3
 
+[![Build Status](https://travis-ci.org/lsst-sqre/git-lfs-s3.svg?branch=master)](https://travis-ci.org/lsst-sqre/git-lfs-s3)
+
+
 A [Git LFS](https://git-lfs.github.com/) server that stores your large Git files on S3.
 
 It works by generating a presigned URL that the Git LFS client can use to upload directly to S3. It also provides download URLs that allow Git clients to download directly from S3. No data is proxied through the Git LFS server.
