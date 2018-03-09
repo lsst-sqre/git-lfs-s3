@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 module GitLfsS3
-  VERSION = '0.3.7'
+  VERSION = '0.3.8'
 end
