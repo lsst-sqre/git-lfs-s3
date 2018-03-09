@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 module GitLfsS3
   module AwsHelpers
     def s3
       @s3 ||= Aws::S3::Client.new({
-        region: aws_region,
-        access_key_id: aws_access_key_id,
-        secret_access_key: aws_secret_access_key
-      })
+                                    region: aws_region,
+                                    access_key_id: aws_access_key_id,
+                                    secret_access_key: aws_secret_access_key
+                                  })
     end
 
     def bucket_name

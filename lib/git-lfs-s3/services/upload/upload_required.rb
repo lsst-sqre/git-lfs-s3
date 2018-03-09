@@ -1,4 +1,6 @@
-require "git-lfs-s3/services/ceph_presigner"
+# frozen_string_literal: true
+
+require 'git-lfs-s3/services/ceph_presigner'
 
 module GitLfsS3
   module UploadService
@@ -29,18 +31,16 @@ module GitLfsS3
 
       def upload_destination
         if ceph_s3
-          GitLfsS3::CephPresignerService::signed_url(object)
+          GitLfsS3::CephPresignerService.signed_url(object)
+        elsif GitLfsS3::Application.settings.public_server
+          object.presigned_url(:put, acl: 'public-read', expires_in: 86_400)
         else
-          if GitLfsS3::Application.settings.public_server
-            object.presigned_url(:put, acl: 'public-read', :expires_in => 86400)
-          else
-            object.presigned_url(:put, :expires_in => 86400)
-          end
+          object.presigned_url(:put, expires_in: 86_400)
         end
       end
 
       def upload_headers
-        {'content-type' => ''}
+        { 'content-type' => '' }
       end
     end
   end

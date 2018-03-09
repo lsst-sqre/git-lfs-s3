@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module GitLfsS3
   module UploadService
     class ObjectExists < Base
@@ -9,7 +11,7 @@ module GitLfsS3
         {
           '_links' => {
             'download' => {
-              'href' => object.presigned_url(:get, :expires_in => 86400)
+              'href' => object.presigned_url(:get, expires_in: 86_400)
             }
           }
         }
