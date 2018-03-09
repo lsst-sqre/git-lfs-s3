@@ -19,7 +19,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_dependency 'aws-sdk', '~> 2'
-  gem.add_dependency 'sinatra', '~> 1'
+  gem.add_dependency 'sinatra', '~> 2'
   gem.add_dependency 'multi_json', '~> 1'
 
   gem.add_development_dependency 'rake', '~> 10'
