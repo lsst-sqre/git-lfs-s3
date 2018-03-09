@@ -159,7 +159,7 @@ module GitLfsS3
       }
       body MultiJson.dump(resp)
     end
-    
+
     def error_resp(status_code, message)
       # Error git-lfs batch response.
       status(status_code)
@@ -169,7 +169,7 @@ module GitLfsS3
       }
       body MultiJson.dump(resp)
     end
-    
+
     post '/objects/batch', provides: 'application/vnd.git-lfs+json' do
       # git-lfs batch API
       authenticated = authorized?
@@ -236,7 +236,7 @@ module GitLfsS3
         logger.debug headers.inspect
         service = UploadService.service_for(request.body)
         logger.debug service.response
-        
+
         status service.status
         body MultiJson.dump(service.response)
       else

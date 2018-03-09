@@ -8,7 +8,7 @@ module GitLfsS3
   module CephPresignerService
     extend self
     extend AwsHelpers
-    
+
     def signed_url(obj)
       expire_at = (DateTime.now + 1).strftime("%s")
       secret_access_key = GitLfsS3::Application.settings.aws_secret_access_key
