@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'sinatra/base'
 require 'date'
 
 module GitLfsS3
