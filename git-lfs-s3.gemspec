@@ -23,4 +23,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'multi_json', '~> 1'
 
   gem.add_development_dependency 'rake', '~> 10'
+  gem.add_development_dependency 'rubocop', '~> 0.53.0'
 end
