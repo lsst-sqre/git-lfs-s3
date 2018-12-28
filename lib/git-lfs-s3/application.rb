@@ -46,6 +46,7 @@ module GitLfsS3
 
     def protected!
       return unless authorized?
+
       response['WWW-Authenticate'] = %(Basic realm="Restricted Area")
       throw(:halt, [401, 'Invalid username or password'])
     end
@@ -58,6 +59,7 @@ module GitLfsS3
       # Validate that size >= 0 and oid is a SHA256 hash.
       oid = obj[:oid]
       return unless obj[:size] >= 0
+
       (oid.hex.size <= 32) && (oid.size == 64) && (oid =~ /^[0-9a-f]+$/)
       # XXX what exception needs to be ignored here?
     rescue Exception
@@ -77,9 +79,9 @@ module GitLfsS3
         'authenticated' => authenticated,
         'actions'       => {
           'download' => {
-            'href'          => obj.presigned_url(:get,
-                                                 expires_in: 86_400),
-            'expires_at'    => expire_at,
+            'href'       => obj.presigned_url(:get,
+                                              expires_in: 86_400),
+            'expires_at' => expire_at,
           },
         },
       }
@@ -95,10 +97,10 @@ module GitLfsS3
         'authenticated' => authenticated,
         'actions'       => {
           'upload' => {
-            'href'          => obj.presigned_url(:put,
-                                                 acl: 'public-read',
-                                                 expires_in: 86_400),
-            'expires_at'    => expire_at,
+            'href'       => obj.presigned_url(:put,
+                                              acl:        'public-read',
+                                              expires_in: 86_400),
+            'expires_at' => expire_at,
           },
         },
       }
@@ -107,11 +109,11 @@ module GitLfsS3
     def obj_error(error, message, obj_json)
       # Format a single error object.
       {
-        'oid'         => obj_json[:oid],
-        'size'        => obj_json[:size],
-        'error'       => {
-          'code'        => error,
-          'message'     => message,
+        'oid'   => obj_json[:oid],
+        'size'  => obj_json[:size],
+        'error' => {
+          'code'    => error,
+          'message' => message,
         },
       }
     end
@@ -159,7 +161,7 @@ module GitLfsS3
       status(200)
       resp = {
         'transfer' => 'basic',
-        'objects' => objects
+        'objects'  => objects
       }
       body MultiJson.dump(resp)
     end
@@ -168,7 +170,7 @@ module GitLfsS3
       # Error git-lfs batch response.
       status(status_code)
       resp = {
-        'message' => message,
+        'message'    => message,
         'request_id' => SecureRandom.uuid
       }
       body MultiJson.dump(resp)
@@ -206,10 +208,10 @@ module GitLfsS3
         if object.exists?
           status 200
           resp = {
-            'oid' => params[:oid],
-            'size' => object.size,
+            'oid'    => params[:oid],
+            'size'   => object.size,
             '_links' => {
-              'self' => {
+              'self'     => {
                 'href' => File.join(
                   settings.server_url, 'objects', params[:oid]
                 )
