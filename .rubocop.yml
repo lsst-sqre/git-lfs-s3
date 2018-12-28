@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: '2.4'
+  TargetRubyVersion: '2.5'
 
 Metrics/BlockLength:
   Enabled: false
@@ -42,3 +42,7 @@ Lint/HandleExceptions:
   Enabled: false
 Lint/RescueException:
   Enabled: false
+
+Layout/AlignHash:
+  EnforcedHashRocketStyle: table
+  EnforcedColonStyle: table

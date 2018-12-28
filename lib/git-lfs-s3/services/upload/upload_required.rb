@@ -13,7 +13,7 @@ module GitLfsS3
         {
           '_links' => {
             'upload' => {
-              'href' => upload_destination,
+              'href'   => upload_destination,
               'header' => upload_headers
             },
             'verify' => {
