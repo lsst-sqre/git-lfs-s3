@@ -25,5 +25,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'sinatra', '~> 2'
 
   gem.add_development_dependency 'rake', '~> 10'
-  gem.add_development_dependency 'rubocop', '~> 0.53.0'
+  gem.add_development_dependency 'rubocop', '~> 0.61.1'
 end
