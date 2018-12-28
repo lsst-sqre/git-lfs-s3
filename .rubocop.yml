@@ -42,3 +42,7 @@ Lint/HandleExceptions:
   Enabled: false
 Lint/RescueException:
   Enabled: false
+
+Layout/AlignHash:
+  EnforcedHashRocketStyle: table
+  EnforcedColonStyle: table
