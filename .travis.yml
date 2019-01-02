@@ -1,5 +1,32 @@
 ---
-language: ruby
-script: bundle install && bundle exec rubocop
+sudo: false
+language: c
+matrix:
+  include:
+    - env: TEST=rubocop
+      language: ruby
+      rvm:
+        - 2.5
+      script: bundle install && bundle exec rubocop
+
+    - env: TEST=markdownlint
+      services:
+        - docker
+      script: ./tests/mdl.sh
+
+    - env: TEST=yamllint
+      services:
+        - docker
+      script: ./tests/yamllint.sh
+
+    - env: TEST=shellcheck
+      services:
+        - docker
+      script: ./tests/shellcheck.sh
+branches:
+  only:
+    - master
+    # also matched against tag pushes
+    - /^\d+\.\d+\.\d+$/
 notifications:
   email: false
