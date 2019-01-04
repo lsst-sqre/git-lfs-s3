@@ -42,5 +42,6 @@ branches:
     - master
     # also matched against tag pushes
     - /^\d+\.\d+\.\d+$/
+    - /^v\d+\.\d+\.\d+$/
 notifications:
   email: false
