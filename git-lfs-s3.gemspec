@@ -7,8 +7,16 @@ require 'git-lfs-s3/version'
 Gem::Specification.new do |gem|
   gem.name          = 'lsst-git-lfs-s3'
   gem.version       = GitLfsS3::VERSION
-  gem.authors       = ['Ryan LeFevre', 'J. Matt Peterson']
-  gem.email         = ['meltingice8917@gmail.com', 'jmatt@lsst.org']
+  gem.authors       = [
+    'Ryan LeFevre',
+    'J. Matt Peterson',
+    'Joshua Hoblitt',
+  ]
+  gem.email = [
+    'meltingice8917@gmail.com',
+    'jmatt@lsst.org',
+    'josh@hoblitt.com',
+  ]
   gem.description   = "LSST's Git LFS server"
   gem.summary       = "LSST's Git LFS server"
   gem.homepage      = 'https://github.com/lsst-sqre/git-lfs-s3'
