@@ -26,6 +26,9 @@ matrix:
 
     - stage: rubygems release
       if: "(NOT type IN (pull_request)) AND (tag IS present)"
+      language: ruby
+      rvm:
+        - 2.5
       deploy:
         provider: rubygems
         api_key:
