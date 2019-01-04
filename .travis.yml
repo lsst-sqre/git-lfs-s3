@@ -23,6 +23,20 @@ matrix:
       services:
         - docker
       script: ./tests/shellcheck.sh
+
+    - stage: rubygems release
+      if: "(NOT type IN (pull_request)) AND (tag IS present)"
+      deploy:
+        provider: rubygems
+        api_key:
+          # yamllint disable-line rule:line-length
+          secure: cU6d9XOQNW7d2nmKJpc3PzO4uDMRKG3q5BdklEzP3fpG5y/5Bv3tZ7y1QHLKk4H8FkDm+KxKmJEp7j75l2xghTh6FtoZBtkD37F6J+NF8Rypaea4KvbRwf6D5ZfQri/6cPafmxpvHHRqaSo4rovyiCKGpT2078eaC2zKA9QxzDWYtBP33zpOdHm0QC8K+miNtOVrRAFWQ3DnnbAy2ZOG7YrOX1CXh3hE2lSkKK1ERvPf+8Tl0XRkYhrbyKYbtScsuCpQPGBxvYe1gAHJwUgUAn4tIy7Mp7iL6ssAvg1kJaOvru0YUrd05RQXu1BFlWDE1Vuss3Ij7rATjEK4zNknk2923MVDtV4Su/rpk8f5sK0JPkyX3spcgt3EAvYj/Q4vsFe1mYkSxqnO4qpy4hpV0mpyKHuDKdtwn6+A2W0WEWAK/6FcQx8snKY904Os2TYPRcSq3acpTyl+ivFMA46NTKPGPAs2dHy1XZVyrtorsY7dTWO3WMvSBkXGcdB7C4UM5t8ceuiGxlmQHCs0v7CAazJze36kTuPoMyddv+wHyGg9KhXbyosPVW4bWQshSXDirLMtZsn0/0XuWv5cdeYalT+FG/igIujtgrdlp/jEyikQvRUYp6G7dx47561sDXN6bPeAYTYTzYrvCqRlne02r/ipecJju3+usHkurEvBzMs=
+        gem: git-lfs-s3
+        # yamllint disable-line rule:truthy
+        on:
+          tags: true
+          branch: master
+          repo: lsst-sqre/git-lfs-s3
 branches:
   only:
     - master
