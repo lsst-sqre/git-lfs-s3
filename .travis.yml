@@ -40,7 +40,6 @@ matrix:
         # yamllint disable-line rule:truthy
         on:
           tags: true
-          branch: master
           repo: lsst-sqre/git-lfs-s3
 branches:
   only:
