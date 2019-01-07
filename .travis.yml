@@ -29,10 +29,10 @@ matrix:
       language: ruby
       rvm:
         - 2.5
-      script: bundle install
+      script: skip
       deploy:
         provider: rubygems
-        skip_cleanup: true
+        skip_cleanup: false
         api_key:
           # yamllint disable-line rule:line-length
           secure: "NH8Kvt9WhvO7MYcksMZ22gxSbEEJJXSIRfZVxI4LVYabbbtFiNjfcXlUmfxJX2wT7uQLCq4mXqBECssL96l8t3Bvx3fqM35I3OjKOFf/4wGg4NxnMctyhomCj3WWdWRsCsfCEUZBgiv37LeTvI+gyKxuatDZH3JEoDXfIqZJmKLAwUR7sYMTffqi5llboU6Q6UPpDXCnTW/tHUkjjzMajdMa5/5PtnniPB1RsBPMUGbOmcUAIYwtA+FHuWBfDoRgzB2iOIkDorvz7lU64NfmRttw7fhWqT4RvMZWzg5Yvi+7av4naQ1a49nZQYy7dsgSInDfOr30SoUM8EQ5L6hsztumVrZQdoJ4MqDlZpy8Keb0pSvu8/dGV2Vf1io2cczDSSfV/QZWOnV2QfNksUzFuG8RNKOjHG0YX6VVvXlkuMkuK49sKiK8TkzcxMFrlwFK5JUAxrEVZEr4rLyXPlQUGGnxBbyCfhhI4cydneFrKVET2k2L80m7MnlRQNQFTFtlJUil/CSn2fhjy32sIpwsIydRwYmXVWrZ+bpYvVhJA1tW5Y9Y0kiiOGNg7HKFN7QQGtv/OHoMsejDnp82/+A4dMiE/hVW8Ui3WZsuLivcjPutRsaYmMSJR6gGsNmm+nyB1ZhKd4vmC7eWA4zroaXZ92YdQowagK3XaRvXWJPcniU="
